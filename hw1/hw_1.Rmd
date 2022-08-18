@@ -1,0 +1,651 @@
+---
+title: "HW1"
+author: "Mehmet Ali Erkan"
+date: "5/29/2022"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Question 1
+
+Reading, Splitting and General Arrangments on the Dataset 
+```{r}
+library(readxl)
+titanic <- read_excel("titanic.xlsx")
+#omit NA value
+titanic <- na.omit(titanic)
+
+
+#Convert some variable to the factor.
+titanic$Sex <- as.factor(titanic$Sex)
+titanic$Survived <- as.factor(titanic$Survived)
+titanic$Embarked <- as.factor(titanic$Embarked)
+titanic$Pclass <- as.factor(titanic$Pclass)
+
+#split the data set
+set.seed(364)
+sp <- sample(1:nrow(titanic), nrow(titanic)*0.8)
+train <- titanic[sp,]
+test <- titanic[-sp,]
+head(titanic)
+```
+
+### Part A
+
+```{r message=FALSE, warning=FALSE}
+model <- glm(Survived ~ . , data = train , family = "binomial")
+summary(model)
+```
+
+The Model is: 
+$$
+y = 4.71 - 1.23*x1 -2.46*x2 -2.68*x3 -0.05*x4 -0.31*x5 - 0.08*x6 + 0.001*x7 - 0.64*x8 -0.29*x9
+$$
+
+### Part B
+
+We write the model equation in part A, now let's interpret them linear
+linear and exponentiated terms.
+
+First take the coefficents.
+And then interpret the exponentially.
+
+For the SECOND PASSENGER CLASS
+
+1.23 is the decrease in the log-odd value that when second passenger class when the other variables held constant, the otherwise $e^{-1.23}$ is the odds ratio resulting from the second passenger class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-1.23)-1)*100
+```
+
+The odds of Survived decreases by 70.77 percent with a changing second passenger class when the other variables held constant.
+
+For the THIRD PASSENGER CLASS
+
+2.46 is the decrease in the log-odd value that when third passenger class when the other variables held constant, the otherwise $e^{-2.46}$ is the odds ratio resulting from the third passenger class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-2.46)-1)*100
+```
+
+The odds of Survived decreases by 91.45 percent with a changing third passenger class when the other variables held constant.
+
+For the MALE
+
+2.68 is the decrease in the log-odd value that when male class when the other variables held constant, the otherwise $e^{-2.68}$ is the odds ratio resulting from the male class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-2.68)-1)*100
+```
+
+The odds of Survived decreases by 93.14 percent with a male class when the other variables held constant.
+
+For the AGE
+
+0.05 is the decrease in the log-odd value that when age class when the other variables held constant, the otherwise $e^{-0.05}$ is the odds ratio resulting from the age class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-0.05)-1)*100
+```
+
+The odds of Survived decreases by 4.87 percent with a age class when the other variables held constant.
+
+For the NUMBER OF SIBLINGS
+
+0.31 is the decrease in the log-odd value that when number of sibling class when the other variables held constant, the otherwise $e^{-0.31}$ is the odds ratio resulting from the number of age class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-0.31)-1)*100
+```
+
+The odds of Survived decreases by 26.65 percent with a number of sibling class when the other variables held constant.
+
+For the NUMBER OF PARENTS
+
+0.088 is the decrease in the log-odd value that when number of parents class when the other variables held constant, the otherwise $e^{-0.088}$ is the odds ratio resulting from the number of parents class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-0.088)-1)*100
+```
+
+The odds of Survived decreases by 8.42 percent with a number of parents class when the other variables held constant.
+
+For the FARE (British pound) VARIABLE
+
+0.001 is the increase in the log-odd value that when fare (British pound) class when the other variables held constant, the otherwise $e^{0.001}$ is the odds ratio resulting from the fare (British pound) class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(0.001)-1)*100
+```
+
+The odds of Survived increased by 0.1 percent with a fare (British pound) class when the other variables held constant.
+
+For the QUEENSTOWN EMBARKED VARIABLE
+
+0.64 is the decrease in the log-odd value that when queenstown embarked class when the other variables held constant, the otherwise $e^{-0.64}$ is the odds ratio resulting from the queenstown embarked class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-0.64)-1)*100
+```
+
+The odds of Survived decreases by 47 percent with a queenstown embarked class when the other variables held constant.
+
+For the SOUTHAMPTON EMBARKED VARIABLE
+
+0.29 is the decrease in the log-odd value that when southampton embarked class when the other variables held constant, the otherwise $e^{-0.29}$ is the odds ratio resulting from the southampton embarked class when the other variables held constant.
+
+```{r message=FALSE, warning=FALSE}
+(exp(-0.29)-1)*100
+```
+
+The odds of Survived decreases by 25 percent with a southampton embarked class when the other variables held constant.
+
+### Part C
+
+Estimated probability of a female passenger in class 3 at age 35 with no siblings or spouse, 
+no parents or children who also paid 75 pounds and embarked the ship at Cherbourg survived is 0.6399.
+
+These are the calculation:
+```{r message=FALSE, warning=FALSE}
+exp(4.71 - 1.23*0 - 2.46*1 - 2.68*0 - 0.05*35 - 0.31*0 - 0.08*0 + 0.001*75 - 0.64*0 - 0.29*0) / (1+exp(4.71 - 1.23*0 - 2.46*1 - 2.68*0 - 0.05*35 - 0.31*0 - 0.08*0 + 0.001*75 - 0.64*0 - 0.29*0))
+```
+The estimated probability that a female passenger in class 3 at age 35 with no siblings or spouse, no parents or children who also paid 75 pounds and embarked the ship at Cherbourg survived is 0.6399.
+
+### Part D
+
+The Hypothesis are:
+$$
+H_0:\beta_k=0 \ and  \ H_a:\beta_k \neq 0
+$$
+
+We use the formula of :
+$$
+z = {\beta_x / se({\beta_x})} 
+$$
+which x is a parameter for 1 to 9.
+
+The decision rule is:
+
+$$
+|z^{*}| \leq z(1-\alpha/2),\ conclude \ H_0
+$$
+Otherwise
+$$
+|z^{*}| > z(1-\alpha/2),\ conclude \ H_a
+$$
+I put the values from the model(summary) in part A.
+ 
+```{r message=FALSE, warning=FALSE}
+x1_test <- -1.2335 / 0.3890
+x2_test <- -2.4672 / 0.4059
+x3_test <- -2.6838 / 0.2517
+x4_test <- -0.0513 / 0.0094
+x5_test <- -0.3100 / 0.1405
+x6_test <- -0.0882 / 0.1360
+x7_test <- 0.0016 / 0.0032
+x8_test <- -0.6488 / 0.6633
+x9_test <- -0.2983 / 0.3093
+print(c(x1_test,x2_test,x3_test,x4_test,x5_test,x6_test,x7_test,x8_test,x9_test))
+```
+
+Critical Value z = 2.575 for level at 0.01
+
+Thus, We can not reject H0 for the x5,x6,x7,x8 and x9.
+x1,x2,x3 and x4 have a significant relationship between Survived variable.
+
+### Part E
+
+The whole procedure is:
+
+$H_{0}$: The coefficients you are interested in are zero. (Reduced model)
+$H_{a}$: Not all of the coefficients in $H_0$ are zero. (Full model)
+
+Test statistic is:
+
+$$
+LR=2ln(\frac{L(FM)}{L(RM)}) = 2(lnL(FM) - lnL(RM))
+$$
+
+```{r message=FALSE, warning=FALSE}
+#Built the model
+model1 <- glm(Survived ~ . , data = train , family = "binomial")
+reduced.model <- glm(Survived ~ 1, data = train, family="binomial")
+
+#Test statistics
+2*(logLik(model1) - logLik(reduced.model))
+#CriticL value
+qchisq(0.1, 10, lower.tail = F)
+
+```
+
+Now, we can make a decision based on the decision rule. 
+
+LR=271.3238 > $\chi^{2}(0.1,10)$. Thus, we can conclude that $H_{1}$, meaning we reject that the reduced model is appropriate. Model is significant.
+
+### Part F
+
+The approximate $1-\alpha$ confidence limits for $\beta_k$
+$$
+\hat \beta_k \pm z(1-\alpha/2)se(\hat \beta_k)
+$$
+Thus our confidence intervals for the parameters:
+```{r message=FALSE, warning=FALSE}
+b1_conf <- print(paste(-1.2335 - 0.3890*1.959964, -1.2335 + 0.3890*1.959964))
+b2_conf <- print(paste(-2.4672 - 0.4059*1.959964, -2.4672 + 0.4059*1.959964))
+b3_conf <- print(paste(-2.6838 - 0.2517*1.959964, -2.6838 + 0.25117*1.959964))
+b4_conf <- print(paste(-0.0513 - 0.0094*1.959964, -0.0513 + 0.0094*1.959964))
+b5_conf <- print(paste(-0.3100 - 0.1405*1.959964, -0.3100 + 0.1405*1.959964))
+b6_conf <- print(paste(-0.0882 - 0.1360*1.959964, -0.0882 + 0.1360*1.959964))
+b7_conf <- print(paste( 0.0016 - 0.0032*1.959964, 0.0016 +0.0032*1.959964))
+b8_conf <- print(paste( -0.6488 - 0.6633*1.959964, -0.6488 + 0.6633*1.959964))
+b9_conf <- print(paste( -0.2983 - 0.3093*1.959964, -0.2983 + 0.3093*1.959964))
+```
+We expect the confidince interval for $\hat \beta_1$ between -1.9959, -0.4710.
+We expect the confidince interval for $\hat \beta_2$ between -3.2627, -1.6716.
+We expect the confidince interval for $\hat \beta_3$ between -3.177, -2.1915.
+We expect the confidince interval for $\hat \beta_4$ between -0.0697, -0.0328.
+We expect the confidince interval for $\hat \beta_5$ between -0.5853, -0.0346.
+We expect the confidince interval for $\hat \beta_6$ between -0.3547, 0.1783.
+We expect the confidince interval for $\hat \beta_7$ between -0.0046, 0.0078.
+We expect the confidince interval for $\hat \beta_8$ between -1.9488, 0.6512.
+We expect the confidince interval for $\hat \beta_9$ between -0.9045, 0.3079.
+
+
+### Part G
+
+The corresponding confidence limits for the odds ratio $exp(\beta_k)$ are :
+$$
+exp(\hat \beta_k \pm z(1-\alpha/2)se(\hat \beta_k))
+$$
+```{r message=FALSE, warning=FALSE}
+b1_conf_odds <- print(paste(exp(-1.2335 - 0.3890*1.959964), exp(-1.2335 + 0.3890*1.959964)))
+b2_conf_odds <- print(paste(exp(-2.4672 - 0.4059*1.959964), exp(-2.4672 +  0.4059*1.959964)))
+b3_conf_odds <- print(paste(exp(-2.6838 - 0.2517*1.959964), exp(-2.6838 + 0.2517*1.959964)))
+b4_conf_odds <- print(paste(exp(-0.0513 - 0.0094*1.959964), exp(-0.0513 + 0.0094*1.959964)))
+b5_conf_odds <- print(paste(exp(-0.3100 - 0.1405*1.959964), exp(-0.3100 + 0.1405*1.959964)))
+b6_conf_odds <- print(paste(exp(-0.0882 - 0.1360*1.959964), exp(-0.0882 + 0.1360*1.959964)))
+b7_conf_odds <- print(paste(exp(0.0016 - 0.0032*1.959964),exp(0.0016 +0.0032*1.959964)))
+b8_conf_odds <- print(paste(exp(-0.6488 - 0.6633*1.959964), exp(-0.6488 + 0.6633*1.959964)))
+b9_conf_odds <- print(paste(exp(-0.2983 - 0.3093*1.959964),exp(-0.2983 + 0.3093*1.959964)))
+```
+
+We expect the odds ratio to between 0.1358 and 0.6243 with 95% condfidence for $exp(\beta_1)$.
+We expect the odds ratio to between 0.038 and 0.18 with 95% condfidence for $exp(\beta_2)$.
+We expect the odds ratio to between 0.0417 and 0.1118 with 95% condfidence for $exp(\beta_3)$.
+We expect the odds ratio to between 0.9326 and 0.9676 with 95% condfidence for $exp(\beta_4)$.
+We expect the odds ratio to between 0.5568 and 0.9659 with 95% condfidence for $exp(\beta_5)$.
+We expect the odds ratio to between 0.7013 and 1.1952 with 95% condfidence for $exp(\beta_6)$.
+We expect the odds ratio to between 0.9953 and 1.007 with 95% condfidence for $exp(\beta_7)$.
+We expect the odds ratio to between 0.1424 and 1.9179 with 95% condfidence for $exp(\beta_8)$.
+We expect the odds ratio to between 0.4047 and 1.3605 with 95% condfidence for $exp(\beta_9)$.
+
+### Part H
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(ResourceSelection)
+hoslem.test(model1$y, fitted(model1))
+``` 
+Since p-value is greater than alpha value, 
+we cannot reject H0. Thus, we conclude that the model is good fit.
+
+### Part I
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+#Scoring to the test data
+
+probability <- predict(model,test, type = "response")
+
+#Matrix for confussion and accuracy
+
+prediction <- rep(0,nrow(test))
+prediction[probability > 0.5] = 1
+t_value <- table(prediction,test$Survived)
+library(caret)
+
+TP <- 40
+FP <- 19
+FN <- 14
+TN <- 70
+number_of_row <- nrow(test)
+
+accuracy <- (TP+TN)/number_of_row
+classification_error <- (FP+FN)/number_of_row
+specificity <- TN/(TN+FP)
+sensitivity <-  TP/(TP+FN)
+negative_prediction_value <- TN/(TN+FN) 
+positive_prediction_value <- TP/(TP+FP)
+prevalence <- (TP+FN)/number_of_row
+detection <- TP/number_of_row
+detection_prevalence <- (TP+FP)/number_of_row
+balanced_accuracy <- (sensitivity+specificity)/2
+no_info_rate <- (TP+FP)/number_of_row
+
+data.frame(accuracy,classification_error,specificity,sensitivity,positive_prediction_value,
+           negative_prediction_value,prevalence,detection,detection_prevalence,balanced_accuracy, no_info_rate)
+
+confusionMatrix(t_value,positive = "1")
+```
+
+### Part J
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(ROCR)
+predictions <- predict(model,newdata = test,type = "response")
+ROCR_predictions <- prediction(predictions,test$Survived)
+ROCR_performance <- performance(ROCR_predictions, measure = "tpr", x.measure = "fpr") 
+
+plot(ROCR_performance, colorize = TRUE, text.adj = c(-0.2,1.7), print.cutoffs.at = seq(0,1,0.1))
+
+auc <- performance(ROCR_predictions, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+# Question 2
+
+### PART A
+
+Flowchart for the Forward Selection
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+
+library(DiagrammeR)
+
+grViz("digraph{
+
+# initiate graph
+graph [layout = dot, rankdir = TB, label = 'Forward Selection\n\n',labelloc = t]
+
+# global node settings
+node [shape = square, style = filled, fillcolor = yellow]
+
+ 
+
+# set up node layout
+      
+      
+      2 [label= 'First regressor selected to be entered into \n the model is the one with the highest correlation with the response. \n Check p-value corresponding to the model containing this variable.']
+      3 [label= 'The regressor is left in the model']
+      4 [label= 'The other regressor examined is the one with \n the largest partial correlation with the response']
+      5 [label= 'The regressor is retained']
+      
+
+      2 -> 3 [label = 'p-value < alpha-to-enter'];
+      3 -> 4 
+      2 -> 4 [label = 'p-value > alpha-to-enter'];
+      4 -> 5 [label = 'p-value < alpha-to-enter'];
+      5 -> 4
+      4 -> 4 [label = 'p-value > alpha-to-enter'];
+}")
+```
+
+Flowchart of Backward Elimination
+
+```{r}
+grViz("digraph{
+
+# initiate graph
+graph [layout = dot, rankdir = TB, label = 'Backward Elimination\n\n',labelloc = t]
+
+# global node settings
+node [shape = rectangle, style = filled, fillcolor = red]
+
+ 
+
+# set up node layout
+      
+      
+      2 [label= 'The partial F statistic is calculated for each variable as if \n it were the last one added to the model. The regressor with the highest p-value is examined first.']
+      3 [label= 'The regressor is removed, and the model is refit with the remaining regressor variables']
+      
+      
+
+      2 -> 3 [label = 'p-value > alpha-to-out'];
+      3 -> 2 [label = 'untill all regressors are examined'];
+     
+}")
+```
+
+Flowchart for the  Stepwise Regression Model
+
+```{r}
+grViz("digraph{
+
+# initiate graph
+graph [layout = dot, rankdir = TB, label = 'Stepwise Regression Model\n\n',labelloc = t]
+
+# global node settings
+node [shape = rectangle, style = filled, fillcolor = green]
+
+ 
+
+# set up node layout
+      
+      
+      2 [label= 'Regression model without any explanatory variables']
+      3 [label= 'Add one explanatory variable not contained in \n the model to the regression model and record significance using AIC']
+      4 [label = 'Are any explanatory variables untested ?']
+      5 [label = 'Is the model without additional explanatory variable  \n more significant than models with additional variable?']
+      6 [label = 'Stop']
+      7 [label = 'Add the most significant (i.e. least AIC) explanatory variable to the regression model']
+
+      2 -> 3 ;
+      3 -> 4 [label= 'Yes'] ;
+      4 -> 5 [label= 'No'];
+      5 -> 6 [label= 'Yes'];
+      6 -> 7 [label= 'No']
+      7 -> 3
+     
+}")
+```
+
+### PART B
+
+Regression models can not get the best option or validated most of the time but it does not mean that
+it is unnecessary and unimportant.We all know that regression is the most accessible and basic appropriate tool for the
+basic analysis. We get benefit to much for the regression in our analysis.
+
+Basically when we are building a model, regression help us to understand the connection between the response and predictors with more appropriate than any other tools or models. That's why we choose the linear regression models are much more preferable than non-linear models.
+
+In conclusion, especially in data analysis, regression model is one of the crucial and effective models and we can not underestimate the importance of these models.
+
+### PART C
+
+The dean of a graduate school can examine variables for the students such as
+amount of school project, amount of research, writing skills, integrity,trustworthiness
+,positive attitude, language skills, number of certificate,voluntary works,gpa value, number of references
+and number of seminars.
+
+### PART D
+
+The alpha-to-enter value for adding variables should not exceed the alpha-to-remove value for eliminating variables in forward stepwise regression. A variable can be maintained in and removed from the model if the alpha-to-enter value for adding variables exceeds the alpha-to-remove value for deleting variables.That's why, should the alpha-to-enter value for adding variables never exceed the alpha-to-remove value for deleting variables.
+
+# Question 3
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+#Read the dataset
+job <- read_excel("job_model_building_data.xlsx")
+head(job)
+```
+
+### PART A
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(Hmisc)
+pairs(~y + x1 +x2 +x3 +x4, data = job, main = "Scatter Plot Matrix")
+rcorr(as.matrix(cor(job)))$r
+```
+It's obvious that x3, x4 between y have strong linear relationship. However,also x3 and x4 seem to have serious multicollinearity problem.
+
+### PART B
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+model2 <- lm(y ~ . , data = job)
+summary(model2)
+```
+The multiple linear equation is:
+$$\hat{y} = -124.38182 + 0.295X_1+0.048X_2+1.306X_3+0.5198X_4$$
+
+### PART C
+```{r}
+library(leaps)
+
+best <- function(model2, ...) 
+{
+  subsets <- regsubsets(formula(model2), model.frame(model2), ...)
+  subsets <- with(summary(subsets),
+                  cbind(p = as.numeric(rownames(which)), which, adjr2))
+
+  return(subsets)
+}  
+
+round(best(model2, nbest = 6), 4)
+```
+
+Since $R^2_{a,p}$ won’t decrease as number of parameter increases, We  should take a look at the absolute value of printed adjusted R square.
+According to the above table value :
+For the subset x1,x3,x4 $R^2_{a,p}$ is 0.956.
+For the subset x1,x2,x3,x4 $R^2_{a,p}$ is 0.955.
+For the subset x1,x3 $R^2_{a,p}$ is 0.927.
+For the subset x1,x2,x3, $R^2_{a,p}$ is 0.925 .
+
+
+### PART D
+```{r}
+library(MASS)
+begin = lm(y ~ 1, job)
+addterm(begin, scope = model2, test="F")
+```
+
+```{r}
+New2 = update( begin, .~. + x3)
+addterm( New2, scope = model2, test="F" )
+```
+
+```{r}
+New2 = update( New2, .~. + x1)
+dropterm(New2 , test = "F")
+```
+
+```{r}
+addterm( New2, scope = model2, test="F" )
+```
+
+```{r}
+New2 = update( New2, .~. + x4)
+dropterm( New2, test = "F" )
+```
+
+```{r}
+addterm( New2, scope = model2, test="F" )
+```
+Start with no predictors, as we shown from the above table, 
+choose x3 since it has the lowest p-value (1.264e-09 < 0.05). 
+
+The result of regressing y on x3 and one more predictor is that x1 has the lowest p-value (1.578e-06 < 0.05). 
+As a result, x1 can be considered in the model. 
+Simultaneously, a test is run to determine whether x3 should be dtropped. 
+x3 is kept because of the p-value (6.313e-13 > 0.10). 
+
+After that, when y is regressed on x3, x1, and either of the other two, it is revealed that x4 has the smallest p-value (0.0007354 < 0.05), indicating that it should be included in the model. 
+
+Simultaneously, a test is run to determine if x1 or x3 should be dtropped. They are both retained since their p-values are both more than 0.10.
+
+Lastly, regressing y on all four variables yields 0.4038<0.05, 
+indicating that x2 isn't significant enough to be included. 
+As a result, it is removed from the model. 
+To predict job proficiency, the optimum collection of predictor factors is (x1,x3,x4)
+
+
+### PART E
+The model examined using forward stepwise regression yields the same result as the one I chose earlier using adjusted R square criterion (you can see top of the list).
+
+### PART F
+
+
+```{r}
+Press_value = sum((model2$residuals/(1-hatvalues(model2)))^2)
+Press_value
+```
+
+### PART G
+```{r}
+job_validation <- read_excel("job_validation_data.xlsx")
+head(job_validation)
+correlation_job_validation <- cor(job_validation)
+correlation_job_validation
+```
+
+According to the results, We can say that there is a multicollinearity 
+problem between x3 and x4. We can see that both of them have a correlation betwwen 
+the response variable and the new correlation matrix is very 
+similar to the correaltion matrix for the model building data set.
+
+### PART H
+```{r}
+new_model <- lm(y~.,data=job_validation)
+summary(new_model)
+```
+Comparing of the MSRES values.
+```{r}
+data.frame(model_building_set_parameter_estimation=summary(model2)$coefficients[,1],
+validation_set_parameter_estimation=summary(new_model)$coefficients[,1],
+model_building_set_se_estimation=summary(model2)$coefficients[,2],
+validation_set_se_estimation=summary(new_model)$coefficients[,2])
+```
+In model creation and validation sets, the parameter estimates for census appear to be different. 
+In addition, the intercept's standard error estimate differs across the two models. 
+Let's look at the MSRES values side by side.
+
+```{r}
+deviance(model2)/model2$df.residual
+deviance(new_model)/new_model$df.residual
+```
+
+MSRES values seem to be close.
+Now, let’s compare R2 values of the two models.
+
+```{r}
+summary(model2)$r.squared
+summary(new_model)$r.squared
+```
+
+In conclusion, the validation set fits the model.
+
+### PART I
+```{r}
+predicted <- predict(model2, job_validation)
+mean((job_validation$y - predicted)^2)
+deviance(model2)/model2$df.residual
+```
+We can see that, MSE from the model-building data set and the mean prediction error are close.
+Thus, there is no evidence of substantial bias problem in MSE here.
+
+
+### PART J
+```{r}
+combine <- merge(job,job_validation,by=c("x1", "x2", "x3", "x4", "y"), all=TRUE)
+head(combine)
+```
+```{r}
+fit_combine_data <- lm(y~., data=combine)
+summary(fit_combine_data)
+```
+Combined last model equation:
+
+$$\hat{y} = -124.22595 + 0.3035X_1+0.06710X_2+1.288X_3+0.5057X_4$$
+Standart Errors of parameter:
+
+B0 : 6.95205
+B1 : 0.02976
+B2 : 0.03347
+B3 : 0.12564
+B4 : 0.10189
+
+The estimated standard deviations of the estimated regression coefficients are now significantly reduced from 
+those obtained for the model building data set.
+
+
+
