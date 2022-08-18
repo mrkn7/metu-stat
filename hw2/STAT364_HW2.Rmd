@@ -1,0 +1,707 @@
+---
+title: "HW2"
+author: "Mehmet Ali Erkan"
+date: "6/29/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Necessary libraries:
+
+```{r message=FALSE, warning=FALSE}
+library(vcd)
+library(nnet)
+library(car)
+library(Hmisc)
+library(MASS)
+library(readxl)
+library(VGAM)
+library(AER)
+library(MASS)
+```
+
+# Question 1
+
+
+```{r}
+accidents <- read_excel("accidents.xlsx")
+head(accidents)
+```
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+model_1 <- vglm(cbind(y1,y2,y3,y4,y5) ~ Gender + Location + SeatBelt + Location*SeatBelt, 
+                data = accidents,
+                family = cumulative(parallel = TRUE))
+summary(model_1)
+```
+
+For males in urban areas wearing seat belts, the estimated cumulative logits and probabilities are:
+
+1-logit(P(response = not injured)) = 1.176265 + 0.546297 + 0.825312 + 0.884981 - 0.124985
+
+```{r}
+1.176265 + 0.546297 + 0.825312 + 0.884981 - 0.124985
+exp(3.3074)/(1+exp(3.3074))
+```
+
+For males in urban areas wearing seat belts, not injured probabilites are 96.46%.
+
+
+2-logit(P(response <= not transported)) = 1.13527 + 0.546297 + 0.825312 + 0.884981 -0.124985
+
+```{r}
+1.135217 + 0.546297 + 0.825312 + 0.884981 - 0.124985
+exp(3.266822)/(1+exp(3.266822))
+```
+
+For males in urban areas wearing seat belts, injured but not transported by emergency medical services are 96.32%.
+
+3-logit(P(response = injured and transported)) = 3.21971 + 0.546297 + 0.825312 + 0.884981 -0.124985
+
+```{r}
+3.21971 + 0.546297 + 0.825312 + 0.884981 -0.124985
+exp(5.351315)/(1+exp(5.351315))
+```
+
+For males in urban areas wearing seat belts, injured and transported by emergency medical services but not hospitalized are 99.52%.
+
+
+4-logit(P(response = injured and hospitalized )) = 5.12666 + 0.546297 + 0.825312 + 0.884981 -0.124985
+
+```{r}
+5.12666 + 0.546297 + 0.825312 + 0.884981 -0.124985
+exp(7.258265)/(1+exp(7.258265))
+```
+
+For males in urban areas wearing seat belts, injured and hospitalized but did not die are 99.92%.
+
+Then, Cumulative log-odds for female drivers - Cumulative log-odds for male drivers = - $\hat{\beta}_{1}$ it's estimaed as -0.0546.
+
+
+
+```{r}
+exp(-0.546)
+```
+
+Hence, the estimated cumulative log-odds ratio is equal to almost 0.58.
+
+Moreover;
+
+```{r}
+0.546297 - 1.96*.007822
+0.546297 + 1.96*.007822
+```
+
+Wald interval for $\hat{\beta}_{1}$ is between 0.53 and 0.56
+
+
+```{r}
+c(exp(-0.5616),exp(-0.5309))
+```
+
+Wald interval for -exp $\hat{\beta}_{1}$ is between 0.570 0.588
+
+
+For any gender and rural location:
+
+Cumulative log odds for those using seat belt - Cumulative log-odds for those not using seat belt = $\hat{\beta}_{3}$, estimated as 0.884981.
+
+Estimated cumulative odds ratio:
+
+```{r}
+exp(0.884981)
+```
+
+For any gender and urban location:
+
+Cumulative log odds for those using seat belt - Cumulative log-odds for those not using seat belt = $\hat{\beta}_{3}$ + $\hat{\beta}_{4}$ , estimated as 
+0.884981 - 0.124985 = 0.76
+
+Estimated cumulative odds ratio:
+
+```{r}
+exp(0.7602)
+```
+
+Lastly, all variables's p value are less than alpha value.It seems all variable is significant in the model.
+
+# Question 2
+
+```{r message=FALSE, warning=FALSE}
+cereal <- read.csv("cereal_dillons.csv")
+```
+
+Before continuing, the explanatory variables must be rearranged. 
+First, in order to account for the various serving sizes among the cereals, 
+each explanatory variable are splitted by its serving size. 
+Next, rescaled each variable so that it will be between 0 and 1. 
+Then, standardization is taken into account in its entirety.
+
+```{r message=FALSE, warning=FALSE}
+standardize <- function(x) { (x - min(x)) / (max(x) - min(x))}
+new_cereal <- data.frame(Shelf = cereal$Shelf, Cereal = cereal$Cereal, 
+                      sugar = standardize(cereal$sugar_g / cereal$size_g), 
+                      fat = standardize(cereal$fat_g / cereal$size_g), 
+                      sodium = standardize(cereal$sodium / cereal$size_g))
+head(new_cereal)
+```
+
+
+### Part A
+
+```{r message=FALSE, warning=FALSE}
+levels(as.factor(new_cereal$Shelf))
+model_2 <- multinom(as.factor(Shelf) ~ sugar + fat + sodium, data=new_cereal)
+summary(model_2)
+Anova(model_2)
+```
+
+Similar to the EDA above, It is observed that sodium and sugar are the main differentiating factors in terms of statistical significance and likelihood ratios. 
+In particular, It can be seen that increases in sodium correspond to decreased likelihood of all other shelves compared to the base-case of shelf 1, 
+and increases in sugar correspond to decreased likelihood of shelves 3 and 4 compared to the base-case of shelf 1, but on the other hand, a slightly increased likelihood of shelf 2 relative to the base-case of shelf 1.
+
+
+### Part B
+
+```{r message=FALSE, warning=FALSE}
+new_standart <- function(meas, serv_size, comparison) 
+  {( meas/serv_size - min(comparison)) / (max(comparison) - min(comparison))}
+data_partb <- data.frame(sugar = new_standart(12, 28, cereal$sugar_g/cereal$size_g), 
+                      fat = new_standart(0.5, 28, cereal$fat_g/cereal$size_g),
+                      sodium = new_standart(130, 28, cereal$sodium_mg/cereal$size_g))
+round(predict(object = model_2, newdata = data_partb, type = "probs", se.fit = TRUE),7)
+```
+
+From the above prediction, It can be see that Kellogg's Apple Jacks are most likely to be placed on shelf 2, given a relatively elevated level of sugar and a sodium level that falls in the first quantile making shelf 1 fairly unlikely. 
+Although it falls solidly under the category of sweet cereals, it does not have an exceptionally high sugar content, making shelves 3 and 4 at least fairly feasible.
+
+### Part C
+
+```{r}
+beta.hat<-coefficients(model_2)
+beta.hat
+mean_fat <- mean(new_cereal$fat)
+mean_sodium <- mean(new_cereal$sodium)
+# Create plotting area first to make sure get the whole region with respect to x-axis
+curve(expr = 1/(1 + exp(beta.hat[1,1] + beta.hat[1,2]*x) + 
+                  exp(beta.hat[2,1] + 
+                        beta.hat[2,2]*x)), ylab = expression(hat(pi)), xlab = "sugar",
+  xlim = c(min(new_cereal$sugar), max(new_cereal$sugar)), ylim = c(0, 1), col = "black", 
+  lty = "solid", lwd = 2, n = 1000, type = "n",
+  panel.first = grid(col = "gray", lty = "dotted"))
+
+## Plot for the each pi_j
+
+# Shelf1
+curve(expr = 1/(1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                          beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                        beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)),
+  col = "black", lty = "solid", lwd = 2, n = 1000, add = TRUE,
+  xlim = c(min(new_cereal$sugar[new_cereal$Shelf == 1]), 
+           max(new_cereal$sugar[new_cereal$Shelf == 1])))
+curve(expr = 1/(1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                          beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                        beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)),
+  col = "black", lty = "dotdash", lwd = 2, n = 1000, add = TRUE,
+  xlim = c(0,1))
+
+# Shelf2
+curve(expr = exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)/
+        (1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                        beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)), 
+      col = "green", lty = "solid", lwd = 2, n = 1000, add = TRUE, 
+      xlim = c(min(new_cereal$sugar[new_cereal$Shelf == 2]),
+               max(new_cereal$sugar[new_cereal$Shelf == 2])))
+curve(expr = exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)/
+        (1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                        beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)), 
+      col = "green", lty = "dotdash", lwd = 2, n = 1000, add = TRUE, 
+      xlim = c(0,1))
+
+# Shel f3
+curve(expr = exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                   beta.hat[2,4]*mean_sodium)/
+        (1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                        beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)),
+  col = "red", lty = "solid", lwd = 2, n = 1000, add = TRUE,
+  xlim = c(min(new_cereal$sugar[new_cereal$Shelf == 3]), 
+           max(new_cereal$sugar[new_cereal$Shelf == 3])))
+curve(expr = exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                   beta.hat[2,4]*mean_sodium)/
+        (1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat + 
+                        beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)),
+  col = "red", lty = "dotdash", lwd = 2, n = 1000, add = TRUE,
+  xlim = c(0,1))
+
+# Shel f4
+curve(expr = exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                   beta.hat[3,4]*mean_sodium)/
+        (1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + 
+                        beta.hat[2,3]*mean_fat + beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)),
+  col = "blue", lty = "solid", lwd = 2, n = 1000, add = TRUE,
+  xlim = c(min(new_cereal$sugar[new_cereal$Shelf == 4]), 
+           max(new_cereal$sugar[new_cereal$Shelf == 4])))   
+curve(expr = exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                   beta.hat[3,4]*mean_sodium)/
+        (1 + exp(beta.hat[1,1] + beta.hat[1,2]*x + beta.hat[1,3]*mean_fat + 
+                   beta.hat[1,4]*mean_sodium)
+                + exp(beta.hat[2,1] + beta.hat[2,2]*x + beta.hat[2,3]*mean_fat +
+                        beta.hat[2,4]*mean_sodium)
+                + exp(beta.hat[3,1] + beta.hat[3,2]*x + beta.hat[3,3]*mean_fat + 
+                        beta.hat[3,4]*mean_sodium)),
+  col = "blue", lty = "dotdash", lwd = 2, n = 1000, add = TRUE,
+  xlim = c(0,1))
+
+legend(x = 0.5, y = 1.0, legend=c("Shelf 1", "Shelf 2", "Shelf 3", "Shelf 4"), 
+       lty=c("solid","solid", "solid", "solid"),
+  col=c("black","green","red", "blue"), bty="n", lwd = c(2,2,2), seg.len = 4)
+
+```
+
+This chart shows the predicted probabilities of which shelf a box of cereal would be found on when sugar content is the only explanatory variable included in the model,these are the for average levels of fat and sodium. 
+In the chart, solid lines are drawn for sugar levels between the minimum and maximum of cereals on each shelf, and dashed lines extend the curves to sugar levels outside this range.
+
+Especially, the plot indicates that for relatively low sugar levels, assuming average levels of fat and sodium, that shelf 3 or shelf 4 are vastly more likely than the other two shelves, but roughly equivalent to one another, while for higher sugar content, shelf 2 becomes dominant in likelihood while shelf 1 becomes more likely than the remaining two shelves. This is consistent with the theory that sugary cereals are marketed to children since they are closest to shelves 1 and 2, but find it difficult to see or reach shelves 3 and 4. As average sodium levels are the primary explanatory factor for shelf 1 relative to all other shelves, including shelf 2, it is also noteworthy that the likelihood increase for shelf 1 is evident but noticeably muted. This is almost certainly owing to this assumption.
+
+### Part D
+
+```{r}
+sd.cereal<-apply(X=new_cereal[, -c(2)], MARGIN = 2, FUN = sd)
+c.value<-c(sd.cereal)[2:4]
+# Estimated standard deviations for each explanatory variable
+round(c.value,2)
+conf.beta <- confint(object = model_2, level = 0.95)
+ci.OR <- exp(c.value*conf.beta[2:4,1:2,])
+#coefficients(mod1)
+beta.hat2<-coefficients(model_2)[1,2:4]
+beta.hat3<-coefficients(model_2)[2,2:4]
+beta.hat4<-coefficients(model_2)[3,2:4]
+# OR for j = 2 (Shelf 2 vs Shelf 1)
+print("OR for j = 2 vs j = 1")
+mid = exp(c.value*beta.hat2)
+round(mid,4)
+round(1/mid,4)
+round(data.frame(low = ci.OR[,1,1], mid = mid, up = ci.OR[,2,1]),4)
+# Significant variables
+round(data.frame(low = 1/ci.OR[3,2,1], mid = 1/mid[3], up = 1/ci.OR[3,1,1]),4)
+# OR for j = 3 (Shelf 3 vs Shelf 1)
+print("OR for j = 3 vs j = 1")
+mid = exp(c.value*beta.hat3)
+round(mid,4)
+round(1/mid,4)
+round(data.frame(low = ci.OR[,1,2], mid = mid, up = ci.OR[,2,2]),4)
+# Significant variables
+round(data.frame(low = 1/ci.OR[c(1,3),2,2], mid = 1/mid[c(1,3)], up = 1/ci.OR[c(1,3),1,2]),4)
+# OR for j = 4 (Shelf 4 vs Shelf 1)
+print("OR for j = 3 vs j = 1")
+mid = exp(c.value*beta.hat4)
+round(mid,4)
+round(1/mid,4)
+round(data.frame(low = ci.OR[,1,3], mid = mid, up = ci.OR[,2,3]),4)
+# Significant variables
+round(data.frame(low = 1/ci.OR[c(1,3),2,3], mid = 1/mid[c(1,3)], up = 1/ci.OR[c(1,3),1,3]),4)
+new_cereal$new_shelf <- relevel(as.factor(new_cereal$Shelf),"2")
+mod.fit <- multinom(new_shelf ~ sugar + fat + sodium, data = new_cereal)
+conf.beta.new <- confint(object = mod.fit, level = 0.95)
+ci.OR.new <- exp(c.value*conf.beta.new[2:4,1:2,])
+beta.hat3.new<-coefficients(mod.fit)[2,2:4]
+beta.hat4.new<-coefficients(mod.fit)[3,2:4]
+# OR for j = 3 (Shelf 3 vs Shelf 2)
+print("OR for j = 3 vs j = 2")
+mid = exp(c.value*beta.hat3.new)
+round(mid,4)
+round(1/mid,4)
+round(data.frame(low = ci.OR.new[,1,2], mid = mid, up = ci.OR.new[,2,2]),4)
+# Significant variables
+round(data.frame(low = 1/ci.OR.new[1,2,2], mid = 1/mid[1], up = 1/ci.OR.new[1,1,2]),4)
+# OR for j = 4 (Shelf 4 vs Shelf 2)
+print("OR for j = 4 vs j = 2")
+mid = exp(c.value*beta.hat4.new)
+round(mid,4)
+round(1/mid,4)
+round(data.frame(low = ci.OR.new[,1,3], mid = mid, up = ci.OR.new[,2,3]),2)
+# Significant variables
+round(data.frame(low = 1/ci.OR.new[1,2,3], mid = 1/mid[1], up = 1/ci.OR.new[1,1,3]),4)
+new_cereal$new_shelf <- relevel(as.factor(new_cereal$Shelf),"3")
+mod.fit <- multinom(new_shelf ~ sugar + fat + sodium, data = new_cereal)
+conf.beta.new <- confint(object = mod.fit, level = 0.95)
+ci.OR.new <- exp(c.value*conf.beta.new[2:4,1:2,])
+beta.hat4.new<-coefficients(mod.fit)[3,2:4]
+# OR for j = 4 (Shelf 3 vs Shelf 3)
+print("OR for j = 4 vs j = 3")
+mid = exp(c.value*beta.hat4.new)
+round(mid,4)
+round(1/mid,4)
+round(data.frame(low = ci.OR.new[,1,3], mid = mid, up = ci.OR.new[,2,3]),4)
+```
+
+We can perform hypothesis tests to determine whether a specific explanatory variable has a statistically significant effect on the odds ratio between the two shelves, in particular by determining if the ratio of 1 is outside the bounds of the 95% confidence interval, in which case we can reject the null hypothesis that the variable in question has no difference between the odds ratios for each explanatory variable for each pair of shelves.
+
+With a 95 percent level of confidence, we can say that the probabilities of a cereal being on shelf 1 as opposed to shelf 2 change by between 2.28 and 1363.37 times for a 0.23 of scaled sodium for shelf 2 vs shelf 1. It is slightly unexpected that sugar is not significant, but when we look at the boxplots, we see that most of the cereals on shelf 1 have sugar levels similar to those on shelf 2, and the only notable difference is due to a cluster of cereals with extremely low sugar levels on shelf 1. However, it is obvious that sodium is significantly different between the shelves in the boxplots, so this result is expected.
+
+Both sugar and sodium are significant for shelf 3 vs shelf 1, and 95 percent confidence estimates that the odds of cereal being on shelf 1 instead of shelf 3 change by between 2.03 and 353.48 times for a 0.27 increase in scaled sugar and by between 8.17 and 11859.32 times for a 0.23 increase in scaled sodium. Given that cereals on shelf 3 have a relatively low sugar content and even lower salt than cereals on shelf 2, it should come as no surprise from looking at the boxplots that both sugar and sodium are important differentiating factors between shelf 3 and shelf 1 cereals. 
+
+Again, when comparing shelf 4 to shelf 1, both sugar and sodium are significant. With a 95 percent confidence level, it can be said that the odds of cereal being on shelf 1 as opposed to shelf 4 change by between 1.64 and 280.78 times for a 0.27 increase in scaled sugar and by between 7.68 and 10968.22 times for a 0.27 increase in scaled sodium, which is similar to that of shelf 3 for the same reasons.
+
+Only sugar is relevant when comparing shelf 3 to shelf 2, indicating that the probability of a cereal being on shelf 2 as opposed to shelf 3 shift by 3.84 to 799.84 times for a 0.27 increase in scaled sugar. 
+
+There are no statistically significant differences between shelf 4 and shelf 3, which is consistent with the relatively identical values for all three explanatory factors for cereals on these two shelves.
+
+
+# Question 3 
+
+Read and arrange the dataset
+
+```{r}
+options(scipen = 7) 
+heart <- read_excel("heart.xlsx")
+heart <- heart[,-1]
+heart$gender <- as.factor(heart$gender)
+```
+
+### Part A
+
+```{r message=FALSE, warning=FALSE}
+
+model3 <- glm(visits ~., family = poisson(link = "log"), data = heart)
+summary(model3)
+```
+Estimated Regression Coefficients:
+
+$$
+\hat{\beta}_{0} = 0.499445664  
+$$
+$$
+\hat{\beta}_{totalcost} = 0.000014951  
+$$
+
+$$
+\hat{\beta}_{age} = 0.006723869  
+$$
+
+$$
+\hat{\beta}_{gender} = 0.181919983  
+$$
+
+$$
+\hat{\beta}_{interventions} = 0.010074793  
+$$
+
+$$
+\hat{\beta}_{drugs} = 0.193236617 
+$$
+
+$$
+\hat{\beta}_{complications} = 0.061254733  
+$$
+$$
+\hat{\beta}_{comorbidities} = -0.000899912  
+$$
+
+$$
+\hat{\beta}_{duration} = 0.000352919
+$$
+Estimated Response Function : 
+
+$log(\hat{\mu}) = 0.499 + 0.000015 * x_{totalcost} + 0.0067 * x_{age} +  0.181 * x_{gender} +  0.01 * x_{interventions} + 0.193 * x_{drugs} + 0.061 * x_{complications} -0.0009 * x_{comorbidities} + 0.00035 * x_{duration}$
+
+Estimated Standard Deviations :
+
+$\hat{\sigma}_{intercept} = 0.176057820$   
+
+$\hat{\sigma}{totalcost} = 0.000002855$   
+
+$\hat{\sigma}_{age} = 0.002967409$   
+
+$\hat{\sigma}_{gender} = 0.043996901$   
+
+$\hat{\sigma}_{interventions} = 0.003808207$   
+
+$\hat{\sigma}_{drugs} = 0.012684930$  
+
+$\hat{\sigma}_{complications} = 0.059949537$   
+
+$\hat{\sigma}_{comorbidities} = 0.003685259$  
+
+$\hat{\sigma}_{duration} = 0.000189882$
+
+
+### Part B
+
+```{r message=FALSE, warning=FALSE}
+model3 <- glm(visits ~., family = poisson(link = "log"), data = heart)
+
+step(model3,direction = "backward")
+```
+
+After applying the backward elimination to the system our last model:
+
+```{r}
+after_elimination <- glm(visits ~ totalcost + age + gender + interventions + 
+                           drugs + duration, family = poisson(link="log"), data = heart)
+summary(after_elimination)
+```
+
+Totalcost,age,gender,interventions,drugs and duration can be maintained in the model. However,complications and comorbidities can be dropped from the model.
+
+And we can see at the above that almost all covariate are significant in a specific alpha value.
+
+### Part C
+
+Hypothesis test for the model:
+
+
+$H_{0}$ : Model is good fit
+$H_{1}$ : Model is not good fit
+
+
+```{r message=FALSE, warning=FALSE}
+summary(after_elimination)
+```
+To decide the hypothesis, deviance / df can be calculated.
+
+Deviance:1044.7
+Degrees of freedom:781
+
+```{r}
+1044.7 / 781
+```
+
+
+Since deviance/df value(1.33) is greater than 1, we can say that model (in part (B)) is not good fit.
+
+Lastly, calculate the critical value:
+
+
+```{r}
+qchisq(0.05, df.residual(after_elimination), lower.tail = F)
+```
+
+We can reject the null hypothesis and say that model is not a good fit because deviance statistics 1044.7 is more extreme than the critical value 847.1252, we can reject the null hypothesis. 
+
+### Part D
+
+Check the overdispersion problem:
+
+$H_{0}$ : True dispersion is less than 1
+$H_{1}$ : True dispersion is greater than 1
+
+```{r message=FALSE, warning=FALSE}
+#one way
+#after_elimination$deviance / after_elimination$residuals
+#or
+dispersiontest(after_elimination)
+```
+
+By looking the output of the dispersiontest() function, we can reject the null hypothesis. 
+Thus, dispersion is greater than 1. This means that there is an overdispersion problem in the model.
+
+Fit a model which accounts for the overdispersion problem:
+
+```{r message=FALSE, warning=FALSE}
+pearson <- residuals(after_elimination, "pearson")
+
+sum(pearson^2)/df.residual(after_elimination)
+sqrt(sum(pearson^2)/df.residual(after_elimination))
+
+
+new_model <- glm(visits ~ totalcost + age + gender + interventions + drugs + duration, 
+                 family = quasipoisson(link="log"), data = heart)
+
+summary(new_model)
+
+pearson_2 <- residuals(new_model, "pearson")
+sqrt(sum(pearson_2^2)/df.residual(new_model))
+```
+
+Now, fit a negative binomial model for the data.
+
+```{r}
+model_negative_bin <- glm.nb(visits ~ totalcost + age + gender + interventions + drugs +
+                               duration, data = heart)
+
+summary(model_negative_bin)
+```
+
+The calculation of the deviance/df value where deviance is equal to 820.5, and the degrees of freedom is equal to 781.
+
+```{r}
+820.5 / 781 
+```
+
+Since the deviance/df value (1.05) is close to 1, we overcome the overdispersion problem and the model fits better compare to the before.
+
+# Question 4
+
+```{r message=FALSE, warning=FALSE}
+mcgill <- read_excel("mcgill.xlsx")
+head(mcgill)
+```
+
+### Part A
+
+Fit the OLS model:
+
+```{r}
+model_4 <- lm(y ~ x, mcgill)
+summary(model_4)
+```
+```{r}
+residual <- model_4$residuals
+plot(1:20, residual)
+```
+
+According to the plot, residuals seem to be correlated. We can see that there are increasig and decreasing patterns in the plot.
+
+### Part B
+
+The formal test for positive autocorrelation at 
+0.01 significance level :
+
+$H_{0} : p = 0$  vs $H_{1} : p > 0$
+
+
+```{r}
+sum((residual[2:20] - residual[1:19]) ^ 2) / sum(residual ^ 2)
+```
+
+Decision Rule:
+
+The sample size is 20, and we know that there is only 
+one predictor in the data set. The significance level is 0.01. 
+
+Obtain $d_{L}$ and $d_{U}$
+
+$d_{L} = 0.95$ , $d_{U} = 1.15$ from the table. 
+
+Rules:
+
+If D < 0.95 , we can reject the null hypothesis,
+
+If D > 1.15, we cannot reject the null hypothesis. 
+
+Otherwise the test is inconclusive.
+
+$d_{L} = 0.95$ , $d_{U} = 1.15$ at $\alpha = 0.01$ significance level.
+
+
+Conclusion :
+
+Since $D = 0.6632531 < d_{L} = 0.95$ , 
+we can reject the null hypothesis, and conclude that there is positive autocorrelation in the data.
+
+Let's do with the Durbin - Watson Test Function:
+
+```{r}
+durbinWatsonTest(model_4, alternative = "positive")
+```
+
+According to the output,the p-value of the test is less than 0.01. 
+We can reject the null hypothesis. 
+Therefore, we can conclude that there is positive autocorrelation.
+
+### Part C
+
+```{r}
+sum(residual[2:20] * residual[1:19] ) / sum(residual[1:19] ^ 2)
+```
+
+Point estimate of the autocorrelation parameter is 0.6729603.
+
+### Part D
+
+When autocorrelation is occured, one way to handle is to transform the variables.
+Cochrane-Orcutt Procedure is the one of the procedure that handle this problem.
+
+Building the transform model:
+
+```{r}
+y_transformation <- mcgill$y[2:20] - 0.6729603 * mcgill$y[1:19]
+x_transformation <- mcgill$x[2:20] - 0.6729603 * mcgill$x[1:19]
+
+linear_model_Coc.Orc <- lm(y_transformation~x_transformation)
+
+summary(linear_model_Coc.Orc)
+```
+
+The estimates of the transformed coefficients are:
+
+$\hat{\beta}_{0}^{'}$ = -0.292346
+
+$\hat{\beta}_{1}^{'}$ = 0.172612
+
+### Part E
+
+Test with the Durbin - Watson:
+
+```{r}
+durbinWatsonTest(linear_model_Coc.Orc,alternative = "positive")
+```
+
+Since p-value of the test is greater than 0.01, we can say that there is no autocorrelation.Transformation with the Cochrane-Orcutt Procedure
+works well.
+
+# Question 5
+
+Iteratively reweighted least squares(IRLS) are used to iteratively estimate the weighted least squares estimate until a stopping criterion is met.Then, Robust regression are estimated by using IRLS.
+
+For Robust Regression IRLS works as following steps:
+
+Firstly, the coefficients are estimated by using iterative procedure. 
+It has been initialed by finding initial estimates of the coefficients, often via using least squares, and then  the weights($W_{0}$) are calculated. 
+
+Then,  those weights are using to calculate the new set of coefficient estimates like below.
+
+$\hat{\beta}{1}$ = $(X'\$W_{0}$$X)^{-1}$*$(X'\$W_{0}Y)$
+
+Secondly, these estimates can be used to find new weights, let's say $W_{1}$ and then  new set of coefficients are calculated.This procedure called as iteratively reweighted least squares(IRLS).
+
+This maintained until there is very little change in the coefficients.
+In other words, this continue until the $\hat{\beta}{i}$ and $\hat{\beta}{i+1}$ are close to each other.
+
+With the IRLS, we are giving full weight to observations on straight line(=1) and we are giving smaller weight to outliers. Robustness can be achieved with this method. 
+
+There are different Robust Criterion Functions such as Huber's function,Ramsay's E_a function, Andrew's wave fucntion...
+
+Different weight functions can be added for each of the criteria and they differ from each other.
+This criterion are specified to to the range of z based on the weight of the given observations. 
+
+Taking derivative of l(z) and it is called  $\psi$ and  divided by z which is ( $\psi$ / z) = w(z). 
+And it is decided the weights for observations according to w(z) with the indicated ranges of z.
+
+In conclusion, if the outliers have a feature that can change the coefficients of the model, model are builded and getting the result, those outliers' can be reduced and  effects on the model by giving less weight to these data points with robust regression.
+
+## Mehmet Ali Erkan - 2467991
